@@ -73,7 +73,32 @@ function DoctorsPageContent() {
 
   const cities = ['All Cities', ...getCitySuggestions()];
 
-  const doctors = getAllDoctors();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+
+  // Fetch doctors from API
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch('/api/doctors');
+        if (response.ok) {
+          const data = await response.json();
+          setDoctors(data);
+        } else {
+          // Fallback to static data if API fails
+          setDoctors(getAllDoctors());
+        }
+      } catch (error) {
+        console.error('Error fetching doctors:', error);
+        // Fallback to static data if API fails
+        setDoctors(getAllDoctors());
+      } finally {
+        setDoctorsLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = searchQuery === '' || 
@@ -88,6 +113,23 @@ function DoctorsPageContent() {
     
     return matchesSearch && matchesCity && matchesSpecialty && matchesGender;
   });
+
+  // Show loading while fetching doctors
+  if (doctorsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <GlobalNavbar showBackButton={true} backHref="/" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 text-lg">Loading doctors...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

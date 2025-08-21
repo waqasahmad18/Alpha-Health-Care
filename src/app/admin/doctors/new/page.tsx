@@ -163,6 +163,13 @@ export default function AddNewDoctor() {
       });
 
       if (response.ok) {
+        // Refresh main website data before redirecting
+        try {
+          await fetch('/api/doctors', { method: 'GET' });
+        } catch (error) {
+          console.log('Main website refresh triggered');
+        }
+        
         router.push('/admin/doctors');
       } else {
         alert('Failed to create doctor');

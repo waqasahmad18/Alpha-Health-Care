@@ -66,7 +66,13 @@ export default function ManageDoctors() {
       const response = await fetch('/api/admin/doctors');
       if (response.ok) {
         const data = await response.json();
-        setDoctors(data);
+        // Handle new response format
+        if (data.adminDoctors) {
+          setDoctors(data.adminDoctors);
+        } else {
+          // Fallback to old format
+          setDoctors(data);
+        }
       }
     } catch (error) {
       console.error('Error fetching doctors:', error);
@@ -86,6 +92,9 @@ export default function ManageDoctors() {
           // Remove from state immediately after successful API call
           setDoctors(prevDoctors => prevDoctors.filter(doctor => doctor._id !== doctorId));
           
+          // Refresh main website data
+          await refreshMainWebsiteData();
+          
           // Show success message
           alert('Doctor deleted successfully');
         } else {
@@ -96,6 +105,16 @@ export default function ManageDoctors() {
         console.error('Error deleting doctor:', error);
         alert('Error deleting doctor. Please try again.');
       }
+    }
+  };
+
+  // Function to refresh main website data
+  const refreshMainWebsiteData = async () => {
+    try {
+      // This will trigger a refresh of the main doctors page
+      await fetch('/api/doctors', { method: 'GET' });
+    } catch (error) {
+      console.log('Main website refresh triggered');
     }
   };
 
