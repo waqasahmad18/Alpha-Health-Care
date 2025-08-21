@@ -48,15 +48,21 @@ export default function AdminDashboard() {
     if (status === 'loading') return;
     
     if (!session) {
+      console.log('No session, redirecting to login');
       router.push('/login');
       return;
     }
 
-    if (session.user.role !== 'admin') {
+    console.log('Session found:', session);
+    console.log('User role:', session.user?.role);
+
+    if (!session.user?.role || session.user.role !== 'admin') {
+      console.log('Not admin, redirecting to home');
       router.push('/');
       return;
     }
 
+    console.log('Admin access granted, fetching stats');
     fetchStats();
     
     // Auto-refresh every 30 seconds
@@ -104,6 +110,13 @@ export default function AdminDashboard() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading Dashboard...</p>
+          <div className="mt-4 p-4 bg-white rounded-lg shadow">
+            <p className="text-sm text-gray-500">Status: {status}</p>
+            <p className="text-sm text-gray-500">Session: {session ? 'Yes' : 'No'}</p>
+            {session && (
+              <p className="text-sm text-gray-500">Role: {session.user?.role || 'Unknown'}</p>
+            )}
+          </div>
         </div>
       </div>
     );
