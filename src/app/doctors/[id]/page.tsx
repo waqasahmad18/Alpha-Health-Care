@@ -30,23 +30,28 @@ export default function DoctorProfile({ params }: { params: Promise<{ id: string
   const [doctor, setDoctor] = useState<any>(null);
 
   useEffect(() => {
-    // Fetch doctor data from API based on the ID parameter
+    // Fetch doctor data directly from admin doctors list
     const fetchDoctor = async () => {
       try {
         const doctorId = parseInt(resolvedParams.id);
         
-        // First try to get from admin API (which has the latest data)
-        const response = await fetch('/api/admin/doctors');
+        // Fetch from admin API with cache busting
+        const response = await fetch(`/api/admin/doctors?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        
         if (response.ok) {
           const data = await response.json();
-          const foundDoctor = data.mainDoctors.find((d: any) => d.id === doctorId);
-          if (foundDoctor) {
-            setDoctor(foundDoctor);
-            return;
+          if (data.mainDoctors && data.mainDoctors.length > 0) {
+            const foundDoctor = data.mainDoctors.find((d: any) => d.id === doctorId);
+            if (foundDoctor) {
+              setDoctor(foundDoctor);
+              return;
+            }
           }
         }
         
-        // Fallback to static data if not found in admin API
+        // Fallback to static data if not found in admin doctors
         const { getAllDoctors } = await import('@/data/doctors');
         const allDoctors = getAllDoctors();
         const foundDoctor = allDoctors.find(d => d.id === doctorId);

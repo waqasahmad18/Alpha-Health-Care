@@ -3,9 +3,12 @@ import { getAllDoctors } from '@/data/doctors';
 
 export async function GET() {
   try {
-    // First try to get from admin API (which has the latest data)
+    // Use a simple approach - fetch from admin API with cache busting
     try {
-      const adminResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/doctors`);
+      const adminResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/doctors?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+      
       if (adminResponse.ok) {
         const adminData = await adminResponse.json();
         if (adminData.mainDoctors && adminData.mainDoctors.length > 0) {
@@ -21,9 +24,8 @@ export async function GET() {
     return NextResponse.json(doctors);
   } catch (error) {
     console.error('Error fetching doctors:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch doctors' },
-      { status: 500 }
-    );
+    // Fallback to static data
+    const doctors = getAllDoctors();
+    return NextResponse.json(doctors);
   }
 }

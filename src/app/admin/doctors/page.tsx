@@ -94,7 +94,7 @@ export default function ManageDoctors() {
           // Remove from state immediately after successful API call
           setDoctors(prevDoctors => prevDoctors.filter(doctor => doctor._id !== doctorId));
           
-          // Refresh main website data
+          // Force refresh of main website data by clearing cache
           await refreshMainWebsiteData();
           
           // Show success message
@@ -113,8 +113,11 @@ export default function ManageDoctors() {
   // Function to refresh main website data
   const refreshMainWebsiteData = async () => {
     try {
-      // This will trigger a refresh of the main doctors page
-      await fetch('/api/doctors', { method: 'GET' });
+      // Force refresh by adding cache-busting parameter
+      await fetch('/api/doctors?t=' + Date.now(), { 
+        method: 'GET',
+        cache: 'no-store'
+      });
       console.log('Main website data refreshed successfully');
     } catch (error) {
       console.log('Main website refresh triggered');
