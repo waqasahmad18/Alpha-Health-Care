@@ -20,7 +20,7 @@ import {
   Shield,
   CheckCircle
 } from 'lucide-react';
-import { getDoctorById } from '@/data/doctors';
+// Remove static import - we'll use API instead
 
 export default function DoctorProfile({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -30,19 +30,65 @@ export default function DoctorProfile({ params }: { params: Promise<{ id: string
   const [doctor, setDoctor] = useState<any>(null);
 
   useEffect(() => {
-    // Get doctor data based on the ID parameter
-    const doctorId = parseInt(resolvedParams.id);
-    const foundDoctor = getDoctorById(doctorId);
-    setDoctor(foundDoctor);
-    
-    // If doctor not found, show 404
-    if (!foundDoctor) {
-      notFound();
-    }
+    // Fetch doctor data from API based on the ID parameter
+    const fetchDoctor = async () => {
+      try {
+        const doctorId = parseInt(resolvedParams.id);
+        
+        // First try to get from admin API (which has the latest data)
+        const response = await fetch('/api/admin/doctors');
+        if (response.ok) {
+          const data = await response.json();
+          const foundDoctor = data.mainDoctors.find((d: any) => d.id === doctorId);
+          if (foundDoctor) {
+            setDoctor(foundDoctor);
+            return;
+          }
+        }
+        
+        // Fallback to static data if not found in admin API
+        const { getAllDoctors } = await import('@/data/doctors');
+        const allDoctors = getAllDoctors();
+        const foundDoctor = allDoctors.find(d => d.id === doctorId);
+        
+        if (foundDoctor) {
+          setDoctor(foundDoctor);
+        } else {
+          notFound();
+        }
+      } catch (error) {
+        console.error('Error fetching doctor:', error);
+        // Fallback to static data
+        try {
+          const { getAllDoctors } = await import('@/data/doctors');
+          const allDoctors = getAllDoctors();
+          const doctorId = parseInt(resolvedParams.id);
+          const foundDoctor = allDoctors.find(d => d.id === doctorId);
+          
+          if (foundDoctor) {
+            setDoctor(foundDoctor);
+          } else {
+            notFound();
+          }
+        } catch (fallbackError) {
+          console.error('Fallback error:', fallbackError);
+          notFound();
+        }
+      }
+    };
+
+    fetchDoctor();
   }, [resolvedParams.id]);
 
   if (!doctor) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading doctor profile...</p>
+        </div>
+      </div>
+    );
   }
 
   const availableSlots = {

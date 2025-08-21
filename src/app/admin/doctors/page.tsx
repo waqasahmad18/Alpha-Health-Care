@@ -16,7 +16,8 @@ import {
   MapPin,
   Building,
   UserCheck,
-  UserX
+  UserX,
+  RefreshCw
 } from 'lucide-react';
 
 interface Doctor {
@@ -39,6 +40,7 @@ export default function ManageDoctors() {
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSpecialty, setFilterSpecialty] = useState('');
   const [filterCity, setFilterCity] = useState('');
@@ -113,9 +115,18 @@ export default function ManageDoctors() {
     try {
       // This will trigger a refresh of the main doctors page
       await fetch('/api/doctors', { method: 'GET' });
+      console.log('Main website data refreshed successfully');
     } catch (error) {
       console.log('Main website refresh triggered');
     }
+  };
+
+  // Function to refresh both admin and main website data
+  const refreshAllData = async () => {
+    setRefreshing(true);
+    await fetchDoctors();
+    await refreshMainWebsiteData();
+    setRefreshing(false);
   };
 
   const filteredDoctors = doctors.filter(doctor => {
@@ -172,13 +183,24 @@ export default function ManageDoctors() {
               <h1 className="text-3xl font-bold text-gray-900">Manage Doctors</h1>
             </div>
             
-            <Link
-              href="/admin/doctors/new"
-              className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Add New Doctor</span>
-            </Link>
+                         <div className="flex items-center space-x-3">
+               <button
+                 onClick={refreshAllData}
+                 disabled={refreshing}
+                 className="flex items-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg hover:shadow-xl"
+               >
+                 <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+                 <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+               </button>
+               
+               <Link
+                 href="/admin/doctors/new"
+                 className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl"
+               >
+                 <Plus className="h-5 w-5" />
+                 <span>Add New Doctor</span>
+               </Link>
+             </div>
           </div>
         </div>
       </div>

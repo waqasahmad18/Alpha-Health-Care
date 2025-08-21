@@ -3,7 +3,7 @@ import { doctors } from '@/data/doctors';
 
 // Mutable list of doctors for admin management - start with all doctors from data
 let adminDoctors = doctors.map((doctor, index) => ({
-  _id: (index + 1).toString(),
+  _id: (doctor.id || (index + 1)).toString(),
   name: doctor.name,
   specialty: doctor.specialty,
   hospital: doctor.hospital,
@@ -71,9 +71,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create new doctor object
+    // Create new doctor object with proper ID generation
+    const newId = Math.max(...adminDoctors.map(d => parseInt(d._id)), 0) + 1;
     const newDoctor = {
-      _id: (adminDoctors.length + 1).toString(),
+      _id: newId.toString(),
       name: body.name,
       specialty: body.specialty,
       hospital: body.hospital,
